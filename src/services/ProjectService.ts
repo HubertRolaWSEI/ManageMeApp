@@ -1,6 +1,7 @@
 import type { Project } from '../types';
 
 const STORAGE_KEY = 'manageme_projects';
+const ACTIVE_PROJECT_KEY = 'manageme_active_project';
 
 export class ProjectService {
   static getAll(): Project[] {
@@ -14,10 +15,7 @@ export class ProjectService {
 
   static add(project: Omit<Project, 'id'>): Project {
     const projects = this.getAll();
-    const id = typeof crypto.randomUUID === 'function' 
-      ? crypto.randomUUID() 
-      : Date.now().toString();
-
+    const id = crypto.randomUUID();
     const newProject = { ...project, id };
     this.saveAll([...projects, newProject]);
     return newProject;
@@ -33,5 +31,20 @@ export class ProjectService {
   static delete(id: string) {
     const projects = this.getAll().filter(p => p.id !== id);
     this.saveAll(projects);
+    if (this.getActiveProjectId() === id) {
+      this.setActiveProjectId(null);
+    }
+  }
+
+  static getActiveProjectId(): string | null {
+    return localStorage.getItem(ACTIVE_PROJECT_KEY);
+  }
+
+  static setActiveProjectId(id: string | null) {
+    if (id) {
+      localStorage.setItem(ACTIVE_PROJECT_KEY, id);
+    } else {
+      localStorage.removeItem(ACTIVE_PROJECT_KEY);
+    }
   }
 }
