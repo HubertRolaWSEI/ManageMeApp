@@ -11,8 +11,24 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import {
   Pencil, Trash2, LayoutDashboard, User as UserIcon,
   CheckCircle2, Clock, PlayCircle, Plus, ArrowLeft,
-  Kanban, ListTodo, ChevronRight, UserCheck, Timer
+  Kanban, ListTodo, ChevronRight, UserCheck, Timer, Sun, Moon
 } from "lucide-react";
+
+
+function useTheme() {
+  const [dark, setDark] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  }, [dark]);
+
+  return { dark, toggle: () => setDark(d => !d) };
+}
 
 type View = 'projects' | 'stories' | 'tasks' | 'task-detail' | 'kanban';
 
@@ -31,6 +47,8 @@ const ROLE_BADGE: Record<string, string> = {
 const fmt = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pl-PL') : '—';
 
 export default function App() {
+  const { dark, toggle } = useTheme();
+
   const [currentUser] = useState<User>(() => UserService.getLoggedInUser());
   const allUsers = useMemo(() => UserService.getAll(), []);
   const assignableUsers = useMemo(() => UserService.getAssignable(), []);
@@ -86,6 +104,7 @@ export default function App() {
 
   useEffect(() => { if (view === 'kanban') loadAllTasks(); }, [view, loadAllTasks]);
 
+  // Projects
   const handleProjectSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!projectForm.nazwa) return;
@@ -105,6 +124,7 @@ export default function App() {
     if (window.confirm('Usunąć ten projekt?')) { ProjectService.delete(id); setProjects(ProjectService.getAll()); }
   };
 
+  // Stories
   const handleStorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!storyForm.nazwa || !activeProjectId) return;
@@ -118,6 +138,7 @@ export default function App() {
     if (window.confirm('Usunąć tę historyjkę?')) { StoryService.delete(id); refreshStories(); }
   };
 
+  // Tasks
   const handleTaskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskForm.nazwa || !activeStoryId) return;
@@ -160,8 +181,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8 text-slate-900 dark:text-slate-100">
       <div className="mx-auto max-w-6xl">
+        {/* HEADER */}
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-6">
           <div className="flex items-center gap-3">
             <LayoutDashboard className="h-7 w-7 text-indigo-600" />
@@ -188,13 +210,17 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={toggle} className="gap-2">
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {dark ? 'Jasny' : 'Ciemny'}
+            </Button>
             {activeProjectId && (
               <Button variant="outline" size="sm" onClick={() => setView(view === 'kanban' ? 'stories' : 'kanban')} className="gap-2">
                 {view === 'kanban' ? <ListTodo className="h-4 w-4" /> : <Kanban className="h-4 w-4" />}
                 {view === 'kanban' ? 'Lista' : 'Kanban'}
               </Button>
             )}
-            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border shadow-sm">
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full border shadow-sm">
               <UserIcon className="h-4 w-4 text-slate-400" />
               <span className="text-sm font-semibold">{currentUser.imie} {currentUser.nazwisko}</span>
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${ROLE_BADGE[currentUser.rola]}`}>{currentUser.rola}</span>
@@ -248,12 +274,12 @@ export default function App() {
                   <Input placeholder="Nazwa historyjki" value={storyForm.nazwa} onChange={e => setStoryForm({ ...storyForm, nazwa: e.target.value })} />
                   <Textarea placeholder="Opis" value={storyForm.opis} onChange={e => setStoryForm({ ...storyForm, opis: e.target.value })} />
                   <div className="grid grid-cols-2 gap-2">
-                    <select className="h-10 w-full rounded-md border border-input px-3 text-sm bg-white" value={storyForm.priorytet} onChange={e => setStoryForm({ ...storyForm, priorytet: e.target.value as StoryPriority })}>
+                    <select className="h-10 w-full rounded-md border border-input px-3 text-sm bg-white dark:bg-slate-800 dark:text-slate-100" value={storyForm.priorytet} onChange={e => setStoryForm({ ...storyForm, priorytet: e.target.value as StoryPriority })}>
                       <option value="niski">Priorytet: Niski</option>
                       <option value="średni">Priorytet: Średni</option>
                       <option value="wysoki">Priorytet: Wysoki</option>
                     </select>
-                    <select className="h-10 w-full rounded-md border border-input px-3 text-sm bg-white" value={storyForm.stan} onChange={e => setStoryForm({ ...storyForm, stan: e.target.value as StoryStatus })}>
+                    <select className="h-10 w-full rounded-md border border-input px-3 text-sm bg-white dark:bg-slate-800 dark:text-slate-100" value={storyForm.stan} onChange={e => setStoryForm({ ...storyForm, stan: e.target.value as StoryStatus })}>
                       <option value="todo">TODO</option>
                       <option value="doing">DOING</option>
                       <option value="done">DONE</option>
@@ -278,7 +304,7 @@ export default function App() {
                   </h3>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {filteredStories.filter(s => s.stan === status).map(story => (
-                      <Card key={story.id} className="bg-white shadow-sm hover:border-indigo-200 transition-colors">
+                      <Card key={story.id} className="bg-white dark:bg-slate-800 shadow-sm hover:border-indigo-200 transition-colors">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-start">
                             <CardTitle className="text-base font-bold">{story.nazwa}</CardTitle>
@@ -286,7 +312,7 @@ export default function App() {
                           </div>
                           <CardDescription className="text-[10px]">Utworzono: {fmt(story.dataUtworzenia)}</CardDescription>
                         </CardHeader>
-                        <CardContent><p className="text-sm text-slate-600 line-clamp-2">{story.opis}</p></CardContent>
+                        <CardContent><p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2">{story.opis}</p></CardContent>
                         <CardFooter className="flex gap-2 border-t pt-3">
                           <Button size="sm" className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-8" onClick={() => { setActiveStoryId(story.id); setView('tasks'); }}>Zadania</Button>
                           <Button variant="outline" size="sm" className="h-8" onClick={() => { setEditingStory(story); setStoryForm({ nazwa: story.nazwa, opis: story.opis, priorytet: story.priorytet, stan: story.stan }); }}><Pencil className="h-3 w-3" /></Button>
@@ -323,7 +349,7 @@ export default function App() {
                       <Input placeholder="Nazwa zadania" value={taskForm.nazwa} onChange={e => setTaskForm({ ...taskForm, nazwa: e.target.value })} />
                       <Textarea placeholder="Opis" value={taskForm.opis} onChange={e => setTaskForm({ ...taskForm, opis: e.target.value })} />
                       <div className="grid grid-cols-2 gap-2">
-                        <select className="h-10 rounded-md border border-input px-3 text-sm bg-white" value={taskForm.priorytet} onChange={e => setTaskForm({ ...taskForm, priorytet: e.target.value as TaskPriority })}>
+                        <select className="h-10 rounded-md border border-input px-3 text-sm bg-white dark:bg-slate-800 dark:text-slate-100" value={taskForm.priorytet} onChange={e => setTaskForm({ ...taskForm, priorytet: e.target.value as TaskPriority })}>
                           <option value="niski">Priorytet: Niski</option>
                           <option value="średni">Priorytet: Średni</option>
                           <option value="wysoki">Priorytet: Wysoki</option>
@@ -354,7 +380,7 @@ export default function App() {
                     <span className="text-slate-300">({storyTasks.filter(t => t.stan === status).length})</span>
                   </h3>
                   {storyTasks.filter(t => t.stan === status).map(task => (
-                    <Card key={task.id} className="bg-white shadow-sm hover:border-indigo-200 transition-colors text-sm">
+                    <Card key={task.id} className="bg-white dark:bg-slate-800 shadow-sm hover:border-indigo-200 transition-colors text-sm">
                       <CardHeader className="pb-1 pt-3 px-3">
                         <div className="flex justify-between">
                           <span className="font-semibold text-sm leading-tight">{task.nazwa}</span>
@@ -395,29 +421,29 @@ export default function App() {
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3">
                     <p className="text-xs text-slate-400 mb-1">Stan</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${activeTask.stan === 'todo' ? 'bg-slate-100 text-slate-600' : activeTask.stan === 'doing' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${activeTask.stan === 'todo' ? 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' : activeTask.stan === 'doing' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
                       {activeTask.stan.toUpperCase()}
                     </span>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3">
                     <p className="text-xs text-slate-400 mb-1">Historyjka</p>
                     <p className="font-medium text-xs">{activeStory?.nazwa ?? '—'}</p>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3">
                     <p className="text-xs text-slate-400 mb-1">Data dodania</p>
                     <p className="font-medium text-xs">{fmt(activeTask.dataUtworzenia)}</p>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3">
                     <p className="text-xs text-slate-400 mb-1">Data startu</p>
                     <p className="font-medium text-xs">{fmt(activeTask.dataStartu)}</p>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3">
                     <p className="text-xs text-slate-400 mb-1">Data zakończenia</p>
                     <p className="font-medium text-xs">{fmt(activeTask.dataZakonczenia)}</p>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
+                  <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-3">
                     <p className="text-xs text-slate-400 mb-1">Czas (est. / real.)</p>
                     <p className="font-medium text-xs">{activeTask.przewidywanyCzas}h / {activeTask.zrealizowaneGodziny ?? '—'}h</p>
                   </div>
@@ -431,7 +457,7 @@ export default function App() {
                   <div className="border rounded-lg p-4 space-y-3 bg-blue-50/50">
                     <p className="text-sm font-semibold flex items-center gap-2"><UserCheck className="h-4 w-4 text-blue-500" /> Przypisz osobę</p>
                     <div className="flex gap-2">
-                      <select className="flex-1 h-9 rounded-md border border-input px-3 text-sm bg-white" value={assignUserId} onChange={e => setAssignUserId(e.target.value)}>
+                      <select className="flex-1 h-9 rounded-md border border-input px-3 text-sm bg-white dark:bg-slate-800 dark:text-slate-100" value={assignUserId} onChange={e => setAssignUserId(e.target.value)}>
                         <option value="">Wybierz osobę...</option>
                         {assignableUsers.map(u => <option key={u.id} value={u.id}>{u.imie} {u.nazwisko} ({u.rola})</option>)}
                       </select>
@@ -491,7 +517,7 @@ export default function App() {
                 const colTasks = tasks.filter(t => t.stan === status && projectStoryIds.has(t.historijaId));
                 return (
                   <div key={status} className="space-y-3">
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-widest ${status === 'todo' ? 'bg-slate-100 text-slate-600' : status === 'doing' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-widest ${status === 'todo' ? 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' : status === 'doing' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
                       {status === 'todo' && <Clock className="h-3.5 w-3.5" />}
                       {status === 'doing' && <PlayCircle className="h-3.5 w-3.5" />}
                       {status === 'done' && <CheckCircle2 className="h-3.5 w-3.5" />}
@@ -501,7 +527,7 @@ export default function App() {
                     {colTasks.map(task => {
                       const story = stories.find(s => s.id === task.historijaId);
                       return (
-                        <Card key={task.id} className="bg-white shadow-sm hover:border-indigo-200 transition-colors cursor-pointer text-sm"
+                        <Card key={task.id} className="bg-white dark:bg-slate-800 shadow-sm hover:border-indigo-200 transition-colors cursor-pointer text-sm"
                           onClick={() => { setActiveStoryId(task.historijaId); setActiveTaskId(task.id); setView('task-detail'); }}>
                           <CardHeader className="pb-1 pt-3 px-3">
                             <div className="flex justify-between">
