@@ -1,5 +1,6 @@
 import type { Task, TaskStatus } from '../types';
 import { StoryService } from './StoryService';
+import { NotificationService } from './NotificationService';
 
 const STORAGE_KEY = 'manageme_tasks';
 const API_DELAY = 300;
@@ -32,6 +33,18 @@ export class TaskService {
       dataUtworzenia: new Date().toISOString(),
     };
     this.saveAll([...this.getAll(), newTask]);
+
+    // Powiadomienie: Nowe zadanie w historyjce (medium, właściciel historyjki)
+    const story = StoryService.getAll().find(s => s.id === task.historijaId);
+    if (story) {
+      NotificationService.add({
+        title: 'Nowe zadanie',
+        message: `Dodano zadanie "${newTask.nazwa}" do Twojej historyjki: ${story.nazwa}`,
+        priority: 'medium',
+        recipientId: story.wlascicielId
+      });
+    }
+
     return fakeApi(newTask);
   }
 
@@ -42,9 +55,23 @@ export class TaskService {
   }
 
   static async delete(id: string): Promise<void> {
-    const task = this.getAll().find(t => t.id === id);
-    this.saveAll(this.getAll().filter(t => t.id !== id));
-    if (task) this._checkStoryStatus(task.historijaId);
+    const tasks = this.getAll();
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+      this.saveAll(tasks.filter(t => t.id !== id));
+      this._checkStoryStatus(task.historijaId);
+
+      // Powiadomienie: Usunięcie zadania (medium, właściciel historyjki)
+      const story = StoryService.getAll().find(s => s.id === task.historijaId);
+      if (story) {
+        NotificationService.add({
+          title: 'Usunięto zadanie',
+          message: `Zadanie "${task.nazwa}" zostało usunięte z historyjki: ${story.nazwa}`,
+          priority: 'medium',
+          recipientId: story.wlascicielId
+        });
+      }
+    }
     return fakeApi(undefined);
   }
 
@@ -66,6 +93,24 @@ export class TaskService {
       StoryService.update({ ...story, stan: 'doing' });
     }
 
+    // Powiadomienie: Przypisanie osoby (high, dla przypisanej osoby)
+    NotificationService.add({
+      title: 'Przypisano Cię do zadania',
+      message: `Zostałeś przypisany do zadania: ${task.nazwa}`,
+      priority: 'high',
+      recipientId: userId
+    });
+
+    // Powiadomienie: Zmiana statusu na doing (low, właściciel historyjki)
+    if (story) {
+      NotificationService.add({
+        title: 'Zmiana statusu zadania',
+        message: `Zadanie "${task.nazwa}" zmieniło status na DOING`,
+        priority: 'low',
+        recipientId: story.wlascicielId
+      });
+    }
+
     return fakeApi(updated);
   }
 
@@ -82,6 +127,18 @@ export class TaskService {
     };
     this.saveAll(tasks.map(t => t.id === taskId ? updated : t));
     this._checkStoryStatus(task.historijaId);
+
+    // Powiadomienie: Zmiana statusu na done (medium, właściciel historyjki)
+    const story = StoryService.getAll().find(s => s.id === task.historijaId);
+    if (story) {
+      NotificationService.add({
+        title: 'Zadanie ukończone',
+        message: `Zadanie "${task.nazwa}" zmieniło status na DONE`,
+        priority: 'medium',
+        recipientId: story.wlascicielId
+      });
+    }
+
     return fakeApi(updated);
   }
 

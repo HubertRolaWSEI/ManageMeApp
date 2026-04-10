@@ -1,4 +1,6 @@
 import type { Project } from '../types';
+import { UserService } from './UserService';
+import { NotificationService } from './NotificationService';
 
 const STORAGE_KEY = 'manageme_projects';
 const ACTIVE_PROJECT_KEY = 'manageme_active_project';
@@ -18,6 +20,18 @@ export class ProjectService {
     const id = crypto.randomUUID();
     const newProject = { ...project, id };
     this.saveAll([...projects, newProject]);
+
+    // Powiadomienie: Utworzono nowy projekt (high, otrzymuje każdy admin)
+    const admins = UserService.getAll().filter(u => u.rola === 'admin');
+    admins.forEach(admin => {
+      NotificationService.add({
+        title: 'Nowy Projekt',
+        message: `Utworzono nowy projekt: ${newProject.nazwa}`,
+        priority: 'high',
+        recipientId: admin.id
+      });
+    });
+
     return newProject;
   }
 

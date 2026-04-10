@@ -44,3 +44,18 @@ export interface Task {
   uzytkownikId?: string;
   zrealizowaneGodziny?: number;
 }
+
+// NOWE TYPY POWIADOMIEŃ
+export type NotificationPriority = 'low' | 'medium' | 'high';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  date: string;
+  priority: NotificationPriority;
+  isRead: boolean;
+  recipientId: string;
+}
+
+export type View = 'projects' | 'stories' | 'tasks' | 'task-detail' | 'kanban' | 'notifications' | 'notification-detail';
