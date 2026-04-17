@@ -1,48 +1,73 @@
-import type { User, UserRole } from '../../types'; // Naprawia błąd 1484
+// src/components/views/UsersView.tsx
+import type { User, UserRole } from '../../types';
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-import { ShieldAlert, UserX, UserCheck } from "lucide-react";
+import { UserCog, ShieldAlert, ShieldCheck } from "lucide-react";
 
 interface Props {
   users: User[];
   currentUser: User;
-  onUpdateUser: (u: User) => void;
+  onUpdateUser: (user: User) => void;
 }
 
 export function UsersView({ users, currentUser, onUpdateUser }: Props) {
   const roles: UserRole[] = ['admin', 'developer', 'devops', 'guest'];
 
+  const handleRoleChange = (user: User, newRole: string) => {
+    // Nie pozwól samemu sobie odebrać admina (bezpieczeństwo)
+    if (user.id === currentUser.id && newRole !== 'admin') {
+      alert("Nie możesz zmienić własnej roli administratora.");
+      return;
+    }
+    onUpdateUser({ ...user, rola: newRole as UserRole });
+  };
+
+  const toggleBlock = (user: User) => {
+    if (user.id === currentUser.id) return;
+    onUpdateUser({ ...user, blocked: !user.blocked });
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold flex items-center gap-2">
-        <ShieldAlert className="text-indigo-600" /> Zarządzanie Użytkownikami
-      </h2>
+      <div className="flex items-center gap-2 mb-6">
+        <UserCog className="h-6 w-6 text-indigo-600" />
+        <h2 className="text-2xl font-bold">Zarządzanie Użytkownikami</h2>
+      </div>
+
       <div className="grid gap-4">
-        {users.map(u => (
-          <Card key={u.id} className={u.blocked ? "opacity-60 bg-slate-50" : "bg-white dark:bg-slate-800"}>
-            <CardContent className="p-4 flex items-center justify-between">
+        {users.map(user => (
+          <Card key={user.id} className={user.blocked ? "opacity-60 bg-slate-50" : ""}>
+            <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                <p className="font-bold">{u.imie} {u.nazwisko} {u.id === currentUser.id && "(Ty)"}</p>
-                <p className="text-sm text-slate-500">{u.email}</p>
+                <p className="font-bold text-lg">{user.imie} {user.nazwisko}</p>
+                <p className="text-sm text-slate-500">{user.email}</p>
               </div>
-              <div className="flex items-center gap-4">
+
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                {/* LISTA WYBORU ROLI */}
                 <select 
-                  className="h-9 rounded-md border text-sm px-2 bg-transparent"
-                  value={u.rola}
-                  onChange={(e) => onUpdateUser({...u, rola: e.target.value as UserRole})}
-                  disabled={u.id === currentUser.id}
+                  value={user.rola}
+                  onChange={(e) => handleRoleChange(user, e.target.value)}
+                  className="p-2 border rounded-md bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500"
                 >
-                  {roles.map(r => <option key={r} value={r}>{r.toUpperCase()}</option>)}
+                  {roles.map(r => (
+                    <option key={r} value={r}>{r.toUpperCase()}</option>
+                  ))}
                 </select>
-                
+
+                {/* PRZYCISK BLOKADY */}
                 <Button 
-                  variant={u.blocked ? "outline" : "destructive"} 
+                  variant={user.blocked ? "outline" : "destructive"}
                   size="sm"
-                  onClick={() => onUpdateUser({...u, blocked: !u.blocked})}
-                  disabled={u.id === currentUser.id}
+                  disabled={user.id === currentUser.id}
+                  onClick={() => toggleBlock(user)}
+                  className="flex items-center gap-2"
                 >
-                  {u.blocked ? <UserCheck className="h-4 w-4 mr-1" /> : <UserX className="h-4 w-4 mr-1" />}
-                  {u.blocked ? "Odblokuj" : "Zablokuj"}
+                  {user.blocked ? (
+                    <><ShieldCheck className="h-4 w-4" /> Odblokuj</>
+                  ) : (
+                    <><ShieldAlert className="h-4 w-4" /> Zablokuj</>
+                  )}
                 </Button>
               </div>
             </CardContent>
