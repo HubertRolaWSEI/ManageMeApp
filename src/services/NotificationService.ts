@@ -1,10 +1,11 @@
 import type { AppNotification } from '../types';
+import { storage } from '../lib/storage';
 
 const STORAGE_KEY = 'manageme_notifications';
 
 export class NotificationService {
   static getAll(): AppNotification[] {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = storage().getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : [];
   }
 
@@ -22,7 +23,7 @@ export class NotificationService {
     };
     
     const updated = [newNotification, ...notifications];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    storage().setItem(STORAGE_KEY, JSON.stringify(updated));
     
     // Wyzwalacz dla okna dialogowego w UI
     window.dispatchEvent(new CustomEvent('app-new-notification', { detail: newNotification }));
@@ -34,13 +35,13 @@ export class NotificationService {
     const notifications = this.getAll().map(n => 
       n.id === id ? { ...n, isRead: true } : n
     );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+    storage().setItem(STORAGE_KEY, JSON.stringify(notifications));
   }
 
   static markAllAsRead(userId: string) {
     const notifications = this.getAll().map(n => 
       n.recipientId === userId ? { ...n, isRead: true } : n
     );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+    storage().setItem(STORAGE_KEY, JSON.stringify(notifications));
   }
 }

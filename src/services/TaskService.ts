@@ -1,6 +1,7 @@
 import type { Task, TaskStatus } from '../types';
 import { StoryService } from './StoryService';
 import { NotificationService } from './NotificationService';
+import { storage } from '../lib/storage';
 
 const STORAGE_KEY = 'manageme_tasks';
 const API_DELAY = 300;
@@ -10,12 +11,12 @@ const fakeApi = <T>(data: T): Promise<T> =>
 
 export class TaskService {
   static getAll(): Task[] {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = storage().getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : [];
   }
 
   static saveAll(tasks: Task[]) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    storage().setItem(STORAGE_KEY, JSON.stringify(tasks));
   }
 
   static async fetchAll(): Promise<Task[]> {

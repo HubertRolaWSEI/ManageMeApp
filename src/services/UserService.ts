@@ -1,13 +1,14 @@
 // src/services/UserService.ts
 import type { User } from '../types';
 import { NotificationService } from './NotificationService';
+import { storage } from '../lib/storage';
 
 // KLUCZOWE: Wpisz tutaj dokładnie ten e-mail, który widać na zrzucie ekranu
 const SUPER_ADMIN_EMAIL = "hubert.rola1337@gmail.com"; 
 
 export const UserService = {
   getAll(): User[] {
-    const data = localStorage.getItem('app_users');
+    const data = storage().getItem('app_users');
     return data ? JSON.parse(data) : [];
   },
 
@@ -30,11 +31,11 @@ export const UserService = {
         blocked: false
       };
 
-      localStorage.setItem('app_users', JSON.stringify([...users, user]));
+      storage().setItem('app_users', JSON.stringify([...users, user]));
       this.notifyAdminsAboutNewUser(user);
     }
 
-    localStorage.setItem('logged_in_user', JSON.stringify(user));
+    storage().setItem('logged_in_user', JSON.stringify(user));
     return user;
   },
 
@@ -51,7 +52,7 @@ export const UserService = {
   },
 
   getLoggedInUser(): User | null {
-    const data = localStorage.getItem('logged_in_user');
+    const data = storage().getItem('logged_in_user');
     if (!data) return null;
     const parsed = JSON.parse(data);
     return this.getAll().find(u => u.id === parsed.id) || null;
@@ -59,10 +60,10 @@ export const UserService = {
 
   updateUser(updatedUser: User) {
     const users = this.getAll().map(u => u.id === updatedUser.id ? updatedUser : u);
-    localStorage.setItem('app_users', JSON.stringify(users));
+    storage().setItem('app_users', JSON.stringify(users));
   },
 
   logout() {
-    localStorage.removeItem('logged_in_user');
+    storage().removeItem('logged_in_user');
   }
 };

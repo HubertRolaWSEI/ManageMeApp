@@ -1,18 +1,19 @@
 import type { Project } from '../types';
 import { UserService } from './UserService';
 import { NotificationService } from './NotificationService';
+import { storage } from '../lib/storage';
 
 const STORAGE_KEY = 'manageme_projects';
 const ACTIVE_PROJECT_KEY = 'manageme_active_project';
 
 export class ProjectService {
   static getAll(): Project[] {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = storage().getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : [];
   }
 
   static saveAll(projects: Project[]) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    storage().setItem(STORAGE_KEY, JSON.stringify(projects));
   }
 
   static add(project: Omit<Project, 'id'>): Project {
@@ -51,14 +52,14 @@ export class ProjectService {
   }
 
   static getActiveProjectId(): string | null {
-    return localStorage.getItem(ACTIVE_PROJECT_KEY);
+    return storage().getItem(ACTIVE_PROJECT_KEY);
   }
 
   static setActiveProjectId(id: string | null) {
     if (id) {
-      localStorage.setItem(ACTIVE_PROJECT_KEY, id);
+      storage().setItem(ACTIVE_PROJECT_KEY, id);
     } else {
-      localStorage.removeItem(ACTIVE_PROJECT_KEY);
+      storage().removeItem(ACTIVE_PROJECT_KEY);
     }
   }
 }

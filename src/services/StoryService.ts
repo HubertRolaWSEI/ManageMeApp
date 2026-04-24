@@ -1,15 +1,16 @@
 import type { Story } from '../types';
+import { storage } from '../lib/storage';
 
 const STORAGE_KEY = 'manageme_stories';
 
 export class StoryService {
   static getAll(): Story[] {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = storage().getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : [];
   }
 
   static saveAll(stories: Story[]) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stories));
+    storage().setItem(STORAGE_KEY, JSON.stringify(stories));
   }
 
   static add(story: Omit<Story, 'id' | 'dataUtworzenia'>): Story {
