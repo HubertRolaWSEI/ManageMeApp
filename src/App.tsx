@@ -32,6 +32,9 @@ import { TaskDetailView } from './components/views/TaskDetailView';
 import { NotificationsView } from './components/views/NotificationsView';
 import { UsersView } from './components/views/UsersView';
 
+import { getActiveBackendName } from './lib/storage';
+import { setStorageBackend, type StorageBackend } from './config/app-config';
+
 import type { Project, Story, Task, User, AppNotification, View } from './types';
 
 export default function App() {
@@ -147,6 +150,22 @@ export default function App() {
             <button onClick={() => setIsRegistering(!isRegistering)} className="w-full mt-4 text-sm text-indigo-600 hover:underline">
               {isRegistering ? 'Masz już konto? Zaloguj się' : 'Nie masz konta? Zarejestruj się'}
             </button>
+            <div className="mt-4 pt-4 border-t text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Magazyn danych:</span>
+                <select
+                  value={getActiveBackendName()}
+                  onChange={e => {
+                    setStorageBackend(e.target.value as StorageBackend);
+                    window.location.reload();
+                  }}
+                  className="text-xs rounded-md border px-2 py-1 bg-white dark:bg-slate-800"
+                >
+                  <option value="localStorage">localStorage (przeglądarka)</option>
+                  <option value="firestore">Firestore (baza NoSQL)</option>
+                </select>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

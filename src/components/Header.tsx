@@ -1,6 +1,8 @@
-import { LayoutDashboard, Sun, Moon, Bell, ChevronRight, User as UserIcon, Users, LogOut } from "lucide-react"; // Usunięto nieużywane ikony
+import { LayoutDashboard, Sun, Moon, Bell, ChevronRight, User as UserIcon, Users, LogOut, Database, HardDrive } from "lucide-react";
 import { Button } from "./ui/button";
 import type { User, Project } from "../types";
+import { getActiveBackendName } from "../lib/storage";
+import { setStorageBackend, type StorageBackend } from "../config/app-config";
 
 interface HeaderProps {
   dark: boolean;
@@ -12,6 +14,41 @@ interface HeaderProps {
   activeProject?: Project;
   onHome: () => void;
   onLogout: () => void;
+}
+
+function StorageSwitcher() {
+  const active = getActiveBackendName();
+  const handleChange = (next: StorageBackend) => {
+    if (next === active) return;
+    setStorageBackend(next);
+    // Adapter jest inicjalizowany raz przy starcie — przeładuj, aby zmiana
+    // magazynu danych została zastosowana.
+    window.location.reload();
+  };
+
+  return (
+    <div className="flex items-center gap-1 rounded-full border bg-white dark:bg-slate-800 px-1 py-1 text-xs"
+         title="Magazyn danych">
+      <button
+        type="button"
+        onClick={() => handleChange('localStorage')}
+        className={`flex items-center gap-1 rounded-full px-2 py-1 ${active === 'localStorage' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`}
+        title="Dane w localStorage (przeglądarka)"
+      >
+        <HardDrive className="h-3 w-3" />
+        <span className="hidden md:inline">Local</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => handleChange('firestore')}
+        className={`flex items-center gap-1 rounded-full px-2 py-1 ${active === 'firestore' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`}
+        title="Dane w bazie Firestore (NoSQL)"
+      >
+        <Database className="h-3 w-3" />
+        <span className="hidden md:inline">DB</span>
+      </button>
+    </div>
+  );
 }
 
 export function Header({ dark, toggleTheme, view, setView, unreadCount, currentUser, activeProject, onHome, onLogout }: HeaderProps) {
@@ -32,6 +69,8 @@ export function Header({ dark, toggleTheme, view, setView, unreadCount, currentU
       </div>
       
       <div className="flex items-center gap-4">
+        <StorageSwitcher />
+
         <Button variant="outline" size="sm" onClick={toggleTheme} className="h-9 w-9 p-0">
           {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
