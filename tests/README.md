@@ -9,7 +9,7 @@ Testy end-to-end weryfikujące podstawowe funkcjonalności aplikacji ManageMe:
 
 ## Uruchamianie
 
-Testy korzystają z trybu `localStorage` aplikacji – nie jest wymagana komunikacja z Firebase ani prawdziwe konto. Konfiguracja Playwright (`playwright.config.ts`) automatycznie buduje aplikację, uruchamia `vite preview` i seeduje zalogowanego użytkownika administracyjnego w `localStorage` przed każdym testem (zob. `e2e/fixtures.ts`).
+Testy korzystają z trybu `localStorage` aplikacji – nie jest wymagana komunikacja z Firebase ani prawdziwe konto. Konfiguracja Playwright (`playwright.config.ts`) automatycznie buduje aplikację, uruchamia `vite preview` i seeduje zalogowanego użytkownika administracyjnego w `localStorage` przed każdym testem (zob. `tests/fixtures.ts`).
 
 ```bash
 # instalacja zależności

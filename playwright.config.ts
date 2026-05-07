@@ -15,7 +15,7 @@ const FIREBASE_ENV = {
 };
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './tests',
   timeout: 30_000,
   expect: { timeout: 7_000 },
   fullyParallel: false,
